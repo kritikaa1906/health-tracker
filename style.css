@@ -1,0 +1,21 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background: #f9f9f9;
+}
+
+h1 {
+  color: #1a73e8;
+}
+
+form input, form button {
+  margin: 5px;
+  padding: 8px;
+}
+
+ul {
+  background: #fff;
+  padding: 10px;
+  list-style: none;
+  border-radius: 5px;
+}
