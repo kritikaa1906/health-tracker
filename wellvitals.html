@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💙 Health Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+    body {
+        font-family: 'Poppins', sans-serif;
+        margin: 0;
+        background: linear-gradient(to right, #e0f7fa, #f1f8e9);
+        color: #333;
+    }
+    h1, h2 {
+        text-align: center;
+        color: #00695c;
+    }
+    .container {
+        max-width: 1100px;
+        margin: 20px auto;
+        padding: 20px;
+    }
+    .form-card, .records-card, .dashboard-card {
+        background: #ffffffcc;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0px 6px 15px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+    .form-card:hover, .records-card:hover, .dashboard-card:hover {
+        transform: translateY(-5px);
+    }
+    label {
+        font-weight: 600;
+        margin-top: 10px;
+        display: block;
+    }
+    input, select, button {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+    }
+    button {
+        background-color: #00796b;
+        color: white;
+        border: none;
+        margin-top: 15px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    button:hover {
+        background-color: #004d40;
+    }
+    .filter-input {
+        margin-bottom: 20px;
+        padding: 10px;
+        border-radius: 10px;
+        border: 1px solid #ccc;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .patient-card {
+        background: #e0f2f1;
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 15px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .patient-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0px 5px 15px rgba(0,0,0,0.2);
+    }
+    .patient-avatar {
+        flex: 0 0 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: #00796b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 20px;
+        margin-right: 15px;
+    }
+    .patient-info {
+        flex: 2;
+    }
+    .patient-stats {
+        flex: 1;
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .stat {
+        background: #ffffffcc;
+        padding: 10px;
+        border-radius: 8px;
+        text-align: center;
+        width: 80px;
+        transition: background-color 0.3s, color 0.3s;
+    }
+    .stat.high {
+        background-color: #ffcccc;
+        color: #b71c1c;
+    }
+    .stat i {
+        display: block;
+        font-size: 18px;
+        margin-bottom: 5px;
+        color: #00796b;
+    }
+    canvas {
+        margin-top: 30px;
+        background: #ffffffcc;
+        border-radius: 15px;
+        padding: 15px;
+        box-shadow: 0px 5px 10px rgba(0,0,0,0.1);
+    }
+    @media(max-width: 768px){
+        .patient-card {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .patient-stats {
+            justify-content: flex-start;
+        }
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>💙 Health Tracker</h1>
+
+    <div class="form-card">
+        <h2>Add Patient Record</h2>
+        <form id="patientForm">
+            <label>Name:</label>
+            <input type="text" id="name" required placeholder="Patient Name">
+            <label>Phone Number:</label>
+            <input type="text" id="number" required placeholder="Phone Number">
+            <label>Month:</label>
+            <select id="month">
+                <option value="January">January</option><option value="February">February</option>
+                <option value="March">March</option><option value="April">April</option>
+                <option value="May">May</option><option value="June">June</option>
+                <option value="July">July</option><option value="August">August</option>
+                <option value="September">September</option><option value="October">October</option>
+                <option value="November">November</option><option value="December">December</option>
+            </select>
+            <label>Blood Pressure (systolic/diastolic, mmHg):</label>
+            <input type="text" id="bp" required placeholder="e.g. 140/90">
+            <label>Blood Sugar (mg/dL):</label>
+            <input type="number" id="diabetes" required placeholder="e.g. 150">
+            <label>Depression Level (1-10):</label>
+            <input type="number" id="depression" min="1" max="10" required>
+            <button type="submit">Add Record</button>
+        </form>
+    </div>
+
+    <input type="text" id="filterName" class="filter-input" placeholder="Search patient by name">
+
+    <div class="records-card">
+        <h2>Patient Records</h2>
+        <div id="patientContainer"></div>
+        <button id="downloadCSV">Download CSV</button>
+    </div>
+
+    <div class="dashboard-card">
+        <h2>Monthly Summary Dashboard</h2>
+        <canvas id="summaryChart" width="400" height="200"></canvas>
+    </div>
+</div>
+
+<script>
+const form = document.getElementById('patientForm');
+const patientContainer = document.getElementById('patientContainer');
+const filterInput = document.getElementById('filterName');
+const downloadBtn = document.getElementById('downloadCSV');
+
+let records = [];
+
+form.addEventListener('submit', e => {
+    e.preventDefault();
+    const record = {
+        name: document.getElementById('name').value,
+        number: document.getElementById('number').value,
+        month: document.getElementById('month').value,
+        bp: document.getElementById('bp').value,
+        diabetes: parseFloat(document.getElementById('diabetes').value),
+        depression: parseInt(document.getElementById('depression').value)
+    };
+    records.push(record);
+    displayRecords();
+    updateSummaryChart();
+    form.reset();
+});
+
+filterInput.addEventListener('input', function(){
+    displayRecords(this.value);
+});
+
+function displayRecords(filter=''){
+    patientContainer.innerHTML = '';
+    records.filter(r => r.name.toLowerCase().includes(filter.toLowerCase()))
+           .forEach(r => {
+               const card = document.createElement('div');
+               card.className = 'patient-card';
+
+               // Extract systolic for high BP check
+               let sysBP = parseInt(r.bp.split('/')[0]);
+               let highBP = sysBP >= 140 || r.diabetes >= 140; // highlight if BP or sugar high
+
+               card.innerHTML = `
+                   <div class="patient-avatar">${r.name.charAt(0).toUpperCase()}</div>
+                   <div class="patient-info">
+                       <strong>${r.name}</strong> <br>
+                       📞 ${r.number} <br>
+                       📅 ${r.month}
+                   </div>
+                   <div class="patient-stats">
+                       <div class="stat ${sysBP >= 140 ? 'high' : ''}"><i class="fa-solid fa-heart-pulse"></i>${r.bp}</div>
+                       <div class="stat ${r.diabetes >= 140 ? 'high' : ''}"><i class="fa-solid fa-droplet"></i>${r.diabetes}</div>
+                       <div class="stat ${r.depression >= 7 ? 'high' : ''}"><i class="fa-solid fa-face-smile"></i>${r.depression}</div>
+                   </div>
+               `;
+               patientContainer.appendChild(card);
+           });
+}
+
+// Chart.js Setup for monthly summary
+const ctx = document.getElementById('summaryChart').getContext('2d');
+const summaryChart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: [], datasets: [
+        {label:'Avg Blood Sugar', data:[], backgroundColor:'rgba(0,150,136,0.7)'},
+        {label:'Avg Depression', data:[], backgroundColor:'rgba(3,169,244,0.7)'}
+    ]},
+    options: { responsive:true, scales:{ y:{beginAtZero:true} } }
+});
+
+function updateSummaryChart(){
+    let months = [...new Set(records.map(r=>r.month))];
+    let avgSugar = [];
+    let avgDep = [];
+    months.forEach(m=>{
+        let recs = records.filter(r=>r.month===m);
+        let sugar = (recs.reduce((sum,r)=>sum+r.diabetes,0)/recs.length).toFixed(2);
+        let dep = (recs.reduce((sum,r)=>sum+r.depression,0)/recs.length).toFixed(2);
+        avgSugar.push(sugar); avgDep.push(dep);
+    });
+    summaryChart.data.labels = months;
+    summaryChart.data.datasets[0].data = avgSugar;
+    summaryChart.data.datasets[1].data = avgDep;
+    summaryChart.update();
+}
+
+// CSV Download
+downloadBtn.addEventListener('click', ()=>{
+    let csv = 'Name,Phone,Month,BP,Blood Sugar,Depression\n';
+    records.forEach(r=>{
+        csv += `${r.name},${r.number},${r.month},${r.bp},${r.diabetes},${r.depression}\n`;
+    });
+    const blob = new Blob([csv], {type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'health_records.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+});
+</script>
+
+</body>
+</html>
