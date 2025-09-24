@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Health Tracker</title>
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>💙 Health Tracker</h1>
+  <p>A simple web app to track patient records (Blood Pressure, Sugar, Depression Level).</p>
+
+  <!-- Patient Form -->
+  <section>
+    <h2>Add Patient Record</h2>
+    <form id="patientForm">
+      <input type="text" id="name" placeholder="Name" required>
+      <input type="number" id="bp" placeholder="Blood Pressure" required>
+      <input type="number" id="sugar" placeholder="Blood Sugar" required>
+      <input type="number" id="depression" placeholder="Depression Level" required>
+      <button type="submit">Add Patient</button>
+    </form>
+  </section>
+
+  <!-- Patient List -->
+  <section>
+    <h2>Patient Records</h2>
+    <ul id="patientList"></ul>
+  </section>
+
+  <!-- Charts -->
+  <section>
+    <h2>Health Trends</h2>
+    <canvas id="bpChart"></canvas>
+    <canvas id="sugarChart"></canvas>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>
